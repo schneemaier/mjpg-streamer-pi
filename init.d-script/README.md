@@ -1,0 +1,8 @@
+sudo cp <script-name> /etc/init.d/
+chmod 755 /etc/init.d/<script-name> 
+sudo update-rc.d <script-name> defaults
+
+to remove:
+sudo update-rc.d -f <script-name> remove
+
+
