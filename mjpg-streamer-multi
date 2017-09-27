@@ -1,0 +1,55 @@
+#!/bin/sh
+# /etc/init.d/mjpg-streamer-multi
+### BEGIN INIT INFO
+# Provides:          mjpg-streamer-multi
+# Required-Start:    $network
+# Required-Stop:     $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: mjpg_streamer for webcam
+# Description:       Streams all /dev/video* to http://IP/?action=stream
+### END INIT INFO
+f_message(){
+        echo "[+] $1"
+}
+ 
+# Carry out specific functions when asked to by the system
+case "$1" in
+        start)
+                f_message "Starting mjpg_streamer"
+                camnum=`ls -l /dev/video* | wc -l`
+                cam=0
+                while [ $cam -lt $camnum ]
+                do
+                        # mkdir -p /home/cam$cam
+                        /usr/local/bin/mjpg_streamer -b -i "/usr/local/lib/input_uvc.so -d /dev/video$cam -r 640x480 -f 15 -l auto" -o "/usr/local/lib/output_http.so -p 808$cam -w /usr/local/www -c schnee:akoska"
+                        # -o "/usr/local/lib/output_file.so -f /home/cam$cam -d 5000"
+                        cam1=`expr $cam + 1`
+                        cam=$cam1
+                        echo $cam
+                done
+                sleep 2
+                f_message "mjpg_streamer started"
+                ;;
+        stop)
+                f_message "Stopping mjpg_streamer…"
+                killall mjpg_streamer
+                f_message "mjpg_streamer stopped"
+                ;;
+        status)
+                pid=`ps -A | grep mjpg_streamer | grep -v "grep" | grep -v mjpg_streamer. | awk '{print $1}' | head -n 1`
+                if [ -n "$pid" ];
+                then
+                        f_message "mjpg_streamer is running with pid ${pid}"
+                        f_message "mjpg_streamer was started with the following command line"
+                        cat /proc/${pid}/cmdline ; echo ""
+                else
+                        f_message "Could not find mjpg_streamer running"
+                fi
+                ;;
+        *)
+                f_message "Usage: $0 {start|stop|status}"
+                exit 1
+                ;;
+esac
+exit 0
